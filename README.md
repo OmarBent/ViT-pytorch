@@ -1,2 +1,2 @@
 # Transformer
-Implementation of vision transformer (ViT) from scratch
+Implementation of vision transformer (ViT) from scratch.
