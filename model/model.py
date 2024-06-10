@@ -24,7 +24,7 @@ def attention(q, k, v, dim):
     attn = F.softmax(scores, dim=-1)
     out = torch.matmul(attn, v)
 
-    return out
+    return out, attn
 
 
 def get_positional_embeddings(sequence_length, d):
@@ -61,12 +61,12 @@ class MultiHeadAttention(nn.Module):
               for l, x in zip(self.linears, (im, im, im))]
 
     # Apply attention to projected batches
-    z = attention(q, k, v, self.d_k)
+    z, attn = attention(q, k, v, self.d_k)
 
     # Concatenate all
     z = self.linears[-1](z.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k))
 
-    return z
+    return z, attn
 
 
 class EncoderBlock(nn.Module):
@@ -87,10 +87,11 @@ class EncoderBlock(nn.Module):
                              nn.Linear(h_dim*4, h_dim))
 
   def forward(self, x):
-    out = x + self.mhsa(self.ln(x))
+    out, attn = self.mhsa(self.ln(x))
+    out = out + x 
     out = out + self.mlp(self.ln(out))
 
-    return out
+    return out, attn
 
 
 class ViT(nn.Module):
@@ -143,10 +144,12 @@ class ViT(nn.Module):
     out = tokens + self.positional_embeddings.repeat(n, 1, 1)
 
     # Transformer encoding
+    attention_weights = []
     for block in self.EncoderBlocks:
-      out = block(out)
+      out, weights = block(out)
+      attention_weights.append(weights)
 
     # Classification
     out = out[:, 0]
 
-    return self.classif(out)
+    return self.classif(out), attention_weights

@@ -21,7 +21,7 @@ def train(args, model, train_loader, device):
         for batch in train_loader:  # tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
             x, y = batch
             x, y = x.to(device), y.to(device)
-            y_hat = model(x)
+            y_hat, _ = model(x)
             loss = criterion(y_hat, y)
 
             train_loss += loss.detach().cpu().item() / len(train_loader)
@@ -31,6 +31,8 @@ def train(args, model, train_loader, device):
             optimizer.step()
 
         print(f"Epoch {epoch + 1}/{args.n_epochs} loss: {train_loss:.2f}")
+
+    torch.save(model.state_dict(), 'model.pt')
 
 
 def test(model, test_loader, device):
@@ -43,7 +45,7 @@ def test(model, test_loader, device):
         for batch in tqdm(test_loader, desc="Testing"):
             x, y = batch
             x, y = x.to(device), y.to(device)
-            y_hat = model(x)
+            y_hat, _ = model(x)
             loss = criterion(y_hat, y)
             test_loss += loss.detach().cpu().item() / len(test_loader)
 
@@ -55,7 +57,7 @@ def test(model, test_loader, device):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", choices=["mnist", "cifar10", "cifar100"], default="mnist",
+    parser.add_argument("--dataset", choices=["mnist", "cifar10", "cifar100"], default="cifar10",
                         help="Which downstream task.")
     parser.add_argument("--n_classes", default=10, type=int,
                         help="Number of classes in dataset.")
@@ -87,6 +89,7 @@ def main():
                         help="The output directory where checkpoints will be written.")
 
     args = parser.parse_args()
+
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device: ", device, f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "")
