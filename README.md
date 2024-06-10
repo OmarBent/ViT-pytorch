@@ -1,2 +1,2 @@
 # Transformer
-A Pytorch implementation of vision transformer (ViT)
+Implementation of vision transformer (ViT) from scratch.
