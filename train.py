@@ -61,7 +61,7 @@ def main():
                         help="Which downstream task.")
     parser.add_argument("--n_classes", default=10, type=int,
                         help="Number of classes in dataset.")
-    parser.add_argument("--img_size", default=28, type=int,
+    parser.add_argument("--img_size", default=32, type=int,
                         help="Resolution size")
     parser.add_argument("--patch_size", default=4, type=int,
                         help="Patch size")
@@ -72,18 +72,23 @@ def main():
     # Training
     parser.add_argument("--n_epochs", default=10, type=int,
                         help="Number of training epochs")
-    parser.add_argument("--learning_rate", default=0.005, type=float,
+    parser.add_argument("--learning_rate", default=0.001, type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument("--train_batch_size", default=128, type=int,
                         help="Total batch size for training.")
     parser.add_argument("--eval_batch_size", default=64, type=int,
                         help="Total batch size for eval.")
-    parser.add_argument("--h_dim", default=8, type=int,
+    parser.add_argument("--h_dim", default=16, type=int,
                         help="Hidden dimension")
-    parser.add_argument("--n_heads", default=2, type=int,
+    parser.add_argument("--n_heads", default=4, type=int,
                         help="Number of self-attention heads")
-    parser.add_argument("--n_blocks", default=2, type=int,
+    parser.add_argument("--n_blocks", default=4, type=int,
                         help="Number of encoder blocks")
+
+    parser.add_argument("--finetune", default=True, type=bool,
+                        help="Whether finetune a pretrained model")
+    parser.add_argument("--checkpoint", default="/content/model.pt", type=str,
+                        help="Path to checkpoint")                        
 
     parser.add_argument("--output_dir", default="output", type=str,
                         help="The output directory where checkpoints will be written.")
@@ -100,6 +105,10 @@ def main():
     # Defining model
     model = ViT(n_classes=args.n_classes, patch_size=args.patch_size, hidden_dim=args.h_dim,
                 n_heads=args.n_heads, n_blocks=args.n_blocks, chw=chw).to(device)
+
+    if args.finetune:
+      chkpt = torch.load(args.checkpoint)
+      model.load_state_dict(chkpt)
 
     # Training
     train(args, model, train_loader, device)
